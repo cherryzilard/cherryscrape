@@ -1,0 +1,27 @@
+name: Hello Docker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "output/**"
+
+permissions:
+  contents: write   # lets the workflow push commits
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t hello .
+      - run: mkdir -p output
+      - run: docker run --rm -v "$PWD/output:/app/output" hello
+      - name: Commit output back to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output/hello.txt
+          git diff --cached --quiet || git commit -m "Update hello.txt"
+          git push
